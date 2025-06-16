@@ -52,6 +52,9 @@ async function main() {
         accessKey: S3_ACCESS_KEY,
         secretKey: S3_SECRET_KEY,
     });
+    if (!await minio.bucketExists(S3_BUCKET)) {
+        throw new Error(`Bucket ${S3_BUCKET} does not exist on S3 endpoint ${S3_ENDPOINT}. Please create it first.`);
+    }
 
     const tables = BACKUP_TABLES.split(',').map(table => table.trim()).filter(Boolean);
     if (tables.length === 0) {
