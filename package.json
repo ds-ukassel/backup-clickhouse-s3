@@ -1,0 +1,11 @@
+{
+  "name": "backup-clickhouse-s3",
+  "module": "main.mjs",
+  "dependencies": {
+    "@clickhouse/client": "^1.11.2",
+    "minio": "^8.0.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.2"
+  }
+}
