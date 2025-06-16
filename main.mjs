@@ -42,7 +42,10 @@ async function main() {
         password: CLICKHOUSE_PASSWORD,
         database: CLICKHOUSE_DATABASE,
     });
-    await ch.ping();
+    const pingResult = await ch.ping();
+    if (!pingResult.success) {
+        throw new Error(`Failed to connect to Clickhouse at ${CLICKHOUSE_URL}`, {cause: pingResult.error});
+    }
 
     const minioUrl = new URL(S3_ENDPOINT_LOCAL || S3_ENDPOINT);
     const minio = new Minio.Client({
