@@ -88,12 +88,8 @@ async function main() {
     }
 }
 
-function objectName(db, table, timestamp = undefined) {
-    let name = `${db}/${table}`;
-    if (timestamp) {
-        name += `/${timestamp}`;
-    }
-    return name;
+function objectName(db, table) {
+    return `${db}/${table}`;
 }
 
 async function backup(ch, db, table, target, base = undefined) {
