@@ -34,7 +34,7 @@ const {
 } = process.env;
 
 async function main() {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const timestamp = new Date().toISOString().replace(/:/g, '.');
 
     const ch = createClient({
         url: CLICKHOUSE_URL,
