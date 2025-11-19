@@ -31,6 +31,10 @@ const {
      * Set to any non-empty string to enable incremental backup.
      */
     BACKUP_INCREMENTAL,
+    /**
+     * Discord webhook URL to send error notifications to.
+     */
+    DISCORD_WEBHOOK_URL,
 } = process.env;
 
 async function main() {
@@ -44,6 +48,7 @@ async function main() {
     });
     const pingResult = await ch.ping();
     if (!pingResult.success) {
+        await sendDiscordWebhook(DISCORD_WEBHOOK_URL, `Couldn't connect to Clickhouse. Backup failed.`);
         throw new Error(`Failed to connect to Clickhouse at ${CLICKHOUSE_URL}`, {cause: pingResult.error});
     }
 
@@ -56,11 +61,13 @@ async function main() {
         secretKey: S3_SECRET_KEY,
     });
     if (!await minio.bucketExists(S3_BUCKET)) {
+        await sendDiscordWebhook(DISCORD_WEBHOOK_URL, `Couldn't find S3 bucket ${S3_BUCKET} for backup. Backup failed.`);
         throw new Error(`Bucket ${S3_BUCKET} does not exist on S3 endpoint ${S3_ENDPOINT}. Please create it first.`);
     }
 
     const tables = BACKUP_TABLES.split(',').map(table => table.trim()).filter(Boolean);
     if (tables.length === 0) {
+        await sendDiscordWebhook(DISCORD_WEBHOOK_URL, 'No tables specified for backup. Backup failed.');
         throw new Error('No tables specified for backup. Set BACKUP_TABLES environment variable.');
     }
 
@@ -118,11 +125,35 @@ async function backup(ch, db, table, target, base = undefined) {
     }).then(r => r.json());
 }
 
+async function sendDiscordWebhook(webhookUrl, message) {
+    if (!webhookUrl) return;
+    try {
+        const response = await fetch(webhookUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({content: message})
+        });
+
+        if (!response.ok) {
+            const text = await response.text();
+            console.error("Failed to send error notification to Discord webhook:", text);
+        } else {
+            console.log("Sent error notification to Discord webhook.");
+        }
+    } catch (error) {
+        console.error("Failed to send error notification to Discord webhook:", error);
+    }
+}
+
+
 if (process.argv[1] === import.meta.filename) {
     try {
         await main();
         console.log('Backup completed successfully.');
     } catch (error) {
+        await sendDiscordWebhook(DISCORD_WEBHOOK_URL, `Error during Clickhouse backup: ${error.message}`);
         console.error('Error during backup:', error);
         process.exit(1);
     }
