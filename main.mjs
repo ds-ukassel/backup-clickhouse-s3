@@ -5,7 +5,7 @@ const {
     /** Clickhouse connection URL. Must use the HTTP or HTTPS protocol. */
     CLICKHOUSE_URL = 'http://localhost:8123',
     CLICKHOUSE_USER = 'default',
-    CLICKHOUSE_PASSWORD = '',
+    CLICKHOUSE_PASSWORD = 'default',
     CLICKHOUSE_DATABASE = 'default',
 
     /** S3 endpoint URL, including protocol (http or https) and (optional) port, but without bucket name. */
@@ -99,7 +99,7 @@ function objectName(db, table) {
 }
 
 async function backup(ch, db, table, target, base = undefined) {
-    let query = `BACKUP TABLE ${db}.${table} TO S3({target: String}, {access_key: String}, {secret_key: String})`;
+    let query = `BACKUP TABLE "${db}"."${table}" TO S3({target: String}, {access_key: String}, {secret_key: String})`;
     const query_params = {
         target,
         access_key: S3_ACCESS_KEY,
